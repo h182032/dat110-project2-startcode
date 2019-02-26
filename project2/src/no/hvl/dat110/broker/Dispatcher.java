@@ -133,6 +133,7 @@ public class Dispatcher extends Stopable {
         // TODO: subscribe user to the topic
 
         storage.addSubscriber(msg.getUser(), msg.getTopic());
+        System.out.println("Added: "+ msg.getUser());
 
         //throw new RuntimeException("not yet implemented");
 
