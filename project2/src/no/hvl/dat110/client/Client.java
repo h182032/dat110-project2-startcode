@@ -22,9 +22,7 @@ public class Client extends Thread {
 	}
 
 	public Message receive() {
-
 		return MessageUtils.fromTransportMessage(connection.receive());
-
 	}
 
 	public boolean connect() {
@@ -36,10 +34,8 @@ public class Client extends Thread {
 		ConnectMsg msg = new ConnectMsg(user);
 
 		if (connection != null) {
-
 			send(msg);
 			connected = true;
-
 		}
 
 		return connected;

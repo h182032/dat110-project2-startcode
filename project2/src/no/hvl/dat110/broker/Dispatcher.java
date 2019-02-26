@@ -1,5 +1,6 @@
 package no.hvl.dat110.broker;
 
+import java.util.Queue;
 import java.util.Set;
 import java.util.Collection;
 
@@ -88,8 +89,11 @@ public class Dispatcher extends Stopable {
 
         Logger.log("onConnect:" + msg.toString());
 
+        Queue<Message> offlineMessages = storage.getOfflineUserMessages(user);
+
         storage.addClientSession(user, connection);
 
+        if (offlineMessages != null) storage.sendOfflineMessages(storage.getSession(user), offlineMessages);
     }
 
     // called by dispatch upon receiving a disconnect message
@@ -100,6 +104,7 @@ public class Dispatcher extends Stopable {
         Logger.log("onDisconnect:" + msg.toString());
 
         storage.removeClientSession(user);
+
 
     }
 
@@ -133,7 +138,6 @@ public class Dispatcher extends Stopable {
         // TODO: subscribe user to the topic
 
         storage.addSubscriber(msg.getUser(), msg.getTopic());
-        System.out.println("Added: "+ msg.getUser());
 
         //throw new RuntimeException("not yet implemented");
 
@@ -159,10 +163,16 @@ public class Dispatcher extends Stopable {
 
 
         Set<String> subscribers = storage.getSubscribers(msg.getTopic());
-
+        Queue<Message> offlineQueue;
         for (String subscriber : subscribers) {
-            ClientSession session = storage.getSession(subscriber);
-            session.send(msg);
+            offlineQueue = storage.getOfflineUserMessages(subscriber);
+
+            if (offlineQueue == null) {
+                ClientSession session = storage.getSession(subscriber);
+                session.send(msg);
+            } else {
+                offlineQueue.add(msg);
+            }
         }
 
 

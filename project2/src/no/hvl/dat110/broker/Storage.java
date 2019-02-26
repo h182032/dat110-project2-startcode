@@ -1,22 +1,21 @@
 package no.hvl.dat110.broker;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import no.hvl.dat110.common.Logger;
+import no.hvl.dat110.messages.Message;
 import no.hvl.dat110.messagetransport.Connection;
 
 public class Storage {
 
     protected ConcurrentHashMap<String, Set<String>> subscriptions;
     protected ConcurrentHashMap<String, ClientSession> clients;
+    protected ConcurrentHashMap<String, Queue<Message>> offlineClients;
 
     public Storage() {
         subscriptions = new ConcurrentHashMap<String, Set<String>>();
         clients = new ConcurrentHashMap<String, ClientSession>();
+        offlineClients = new ConcurrentHashMap<String, Queue<Message>>();
     }
 
     public Collection<ClientSession> getSessions() {
@@ -36,6 +35,14 @@ public class Storage {
         return session;
     }
 
+    public Queue<Message> getOfflineUserMessages(String user) {
+        return offlineClients.getOrDefault(user, null);
+    }
+
+    public Collection<String> getOfflineUsers() {
+        return offlineClients.keySet();
+    }
+
     public Set<String> getSubscribers(String topic) {
         return (subscriptions.get(topic));
     }
@@ -46,7 +53,11 @@ public class Storage {
 
         ClientSession clientSession = new ClientSession(user, connection);
 
+        //Create a session and add it to clients
         clients.put(user, clientSession);
+
+        //Remove them from offline users
+        removeOfflineUser(user);
 
         // throw new RuntimeException("not yet implemented");
 
@@ -56,7 +67,11 @@ public class Storage {
 
         // TODO: remove client session for user from the storage
 
+        //Remove client from online
         clients.remove(user);
+
+        //Add client to offline clients and create a queue for messages
+        addOfflineUser(user);
 
         // throw new RuntimeException("not yet implemented");
 
@@ -106,4 +121,22 @@ public class Storage {
 
         //throw new RuntimeException("not yet implemented");
     }
+
+    public void addOfflineUser(String user) {
+        offlineClients.put(user, new LinkedList<>());
+    }
+
+    public void removeOfflineUser(String user) {
+        offlineClients.remove(user);
+    }
+
+    public void sendOfflineMessages(ClientSession session, Queue<Message> messages) {
+        if (messages.size() == 0) return;
+
+        while (!messages.isEmpty()) {
+            session.send(messages.poll());
+        }
+    }
+
+
 }

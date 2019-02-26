@@ -44,7 +44,7 @@ public abstract class Test0Base {
 	public void tearDown() throws Exception {
 		
 		try {
-			Thread.sleep(10000); // let the system run for a while
+			Thread.sleep(5000); // let the system run for a while
 			broker.join();
 			dispatcher.doStop();
 			dispatcher.join();
