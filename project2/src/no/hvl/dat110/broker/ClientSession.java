@@ -36,7 +36,6 @@ public class ClientSession {
 	}
 
 	public boolean hasData() {
-
 		return connection.hasData();
 	}
 
