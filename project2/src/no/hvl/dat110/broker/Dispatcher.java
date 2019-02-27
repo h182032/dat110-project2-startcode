@@ -84,15 +84,14 @@ public class Dispatcher extends Stopable {
 
     // called from Broker after having established the underlying connection
     public void onConnect(ConnectMsg msg, Connection connection) {
-
         String user = msg.getUser();
-
         Logger.log("onConnect:" + msg.toString());
 
+        //Get queue from offline subscribed messages
         Queue<Message> offlineMessages = storage.getOfflineUserMessages(user);
-
         storage.addClientSession(user, connection);
 
+        //If there has been offline messages, send them
         if (offlineMessages != null) storage.sendOfflineMessages(storage.getSession(user), offlineMessages);
     }
 
@@ -161,12 +160,15 @@ public class Dispatcher extends Stopable {
 
         // TODO: publish the message to clients subscribed to the topic
 
-
+        //Create set and queue from subscribers
         Set<String> subscribers = storage.getSubscribers(msg.getTopic());
         Queue<Message> offlineQueue;
+
+        //Go through the enitre subscriber list
         for (String subscriber : subscribers) {
             offlineQueue = storage.getOfflineUserMessages(subscriber);
 
+            //Send messages if they are online, or add to queue if not
             if (offlineQueue == null) {
                 ClientSession session = storage.getSession(subscriber);
                 session.send(msg);

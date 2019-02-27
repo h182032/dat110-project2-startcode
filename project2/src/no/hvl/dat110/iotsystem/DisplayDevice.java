@@ -22,13 +22,15 @@ public class DisplayDevice {
 
         client.connect();
 
+        //Create and subscribe to topic
         client.createTopic(Common.TEMPTOPIC);
         client.subscribe(Common.TEMPTOPIC);
 
         System.out.println("Display Device");
         for (int i = 0; i < COUNT; i++) {
             try {
-                System.out.println(client.receive().toString());
+                PublishMsg msg = (PublishMsg) client.receive();
+                System.out.println(msg.getMessage());
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
